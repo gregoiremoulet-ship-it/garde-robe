@@ -51,7 +51,7 @@ small,.mut{color:var(--mut)}
 <nav id="nav"></nav>
 <div id="sheet" class="sheet"></div><div id="toast"></div>
 <script>
-const CATS=["Haut","Bas","Robe","Veste","Chaussures","Accessoire"],EMO={Haut:"👕",Bas:"👖",Robe:"👗",Veste:"🧥",Chaussures:"👟",Accessoire:"🧣"};
+const CATS=["T-shirt","Pull & sweat","Bas","Robe","Veste","Chaussures","Accessoire"],EMO={"T-shirt":"👕","Pull & sweat":"🧶",Haut:"👕",Bas:"👖",Robe:"👗",Veste:"🧥",Chaussures:"👟",Accessoire:"🧣"};
 const SEAS=["Été","Hiver","Mi-saison"],OCC=["Décontracté","Travail","Soirée","Sport"];
 const COL={Noir:"#111",Blanc:"#f5f5f5",Gris:"#999",Beige:"#d9c3a0",Marron:"#7a4a2a",Bleu:"#2a5db0",Marine:"#14284b",Vert:"#2f7d4f",Rouge:"#c0262d",Rose:"#e88ab0",Jaune:"#f2c230",Orange:"#e8782a",Violet:"#7a4fb0"};
 const NEUTRAL=["Noir","Blanc","Gris","Beige","Marine","Marron"];
@@ -90,7 +90,7 @@ function generate(){
   for(let n=0;n<80;n++){
     let it=[];
     if(L("Robe").length&&Math.random()<.3)it.push(pick(L("Robe")));
-    else{if(!L("Haut").length||!L("Bas").length)return null;const h=pick(L("Haut")),b=pick(L("Bas"));if(!matches(h,b))continue;it.push(h,b)}
+    else{const T=[...L("T-shirt"),...L("Pull & sweat"),...L("Haut")];if(!T.length||!L("Bas").length)return null;const h=pick(T),b=pick(L("Bas"));if(!matches(h,b))continue;it.push(h,b)}
     if(L("Chaussures").length){const s=pick(L("Chaussures"));if(!it.every(i=>matches(i,s)))continue;it.push(s)}
     if(L("Veste").length&&(ui.seas==="Hiver"||ui.seas==="Mi-saison"||Math.random()<.35)){const v=pick(L("Veste"));if(it.every(i=>matches(i,v)))it.push(v)}
     if(L("Accessoire").length&&Math.random()<.4)it.push(pick(L("Accessoire")));
@@ -125,7 +125,7 @@ function closet(){
   m.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>{ui.cat=b.dataset.c;closet()});
   m.querySelectorAll(".it").forEach(e=>e.onclick=()=>clothForm(C(e.dataset.id)));$("#add").onclick=()=>clothForm()}
 function clothForm(c){
-  const isNew=!c;c=c||{id:id(),name:"",cat:"Haut",color:"Noir",seas:"",occ:"",img:""};
+  const isNew=!c;c=c||{id:id(),name:"",cat:"T-shirt",color:"Noir",seas:"",occ:"",img:""};
   const opt=(a,v,e)=>(e?`<option value="">${e}</option>`:"")+a.map(x=>`<option ${x===v?"selected":""}>${x}</option>`).join("");
   openSheet(`<h2 style="margin-top:0">${isNew?"Nouvelle pièce":"Modifier"}</h2>
   <div class="drop" id="dr">${c.img?`<img src="${c.img}">`:"📷 Touche pour ajouter une photo"}<input type="file" accept="image/*" id="f"></div>
@@ -162,5 +162,5 @@ function me(){
   $("#ex").onclick=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(S)],{type:"application/json"}));a.download="garde-robe.json";a.click()};
   $("#im").onchange=e=>{const r=new FileReader();r.onload=async()=>{try{S=JSON.parse(r.result);await save();toast("Importé ✅");render()}catch{toast("Fichier invalide")}};r.readAsText(e.target.files[0])}}
 
-load().then(d=>{if(d)S=d;render()});
+load().then(d=>{if(d)S=d;let ch=0;S.clothes.forEach(c=>{if(c.cat==="Haut"){c.cat=/^(pull|sweat)/i.test(c.name)?"Pull & sweat":"T-shirt";ch=1}});if(ch)save();render()});
 </script></body></html>
