@@ -27,5 +27,18 @@ app.post("/api/tryon", async (req, res) => {
     res.json({ image: `data:${d.mimeType || d.mime_type};base64,${d.data}` });
   } catch (e) { res.status(500).json({ error: String(e.message || e) }); }
 });
+const OKHOST=/(^|\.)(uniqlo\.com|zara\.net|zara\.com|scene7\.com|shopify\.com|stussy\.com|carhartt-wip\.com|stoneisland\.com|ralphlauren\.(fr|com)|cloudinary\.com|imgix\.net|akamaized\.net)$/;
+app.get("/api/img", async (req, res) => {
+  try {
+    const u = new URL(req.query.url);
+    if (u.protocol !== "https:" || !OKHOST.test(u.hostname)) return res.status(400).end();
+    const r = await fetch(u, { headers: { "User-Agent": "Mozilla/5.0" } });
+    const ct = r.headers.get("content-type") || "";
+    if (!r.ok || !ct.startsWith("image/")) return res.status(502).end();
+    const b = Buffer.from(await r.arrayBuffer());
+    if (b.length > 8e6) return res.status(413).end();
+    res.set("Content-Type", ct).send(b);
+  } catch { res.status(400).end(); }
+});
 const port = process.env.PORT || 3000;
 app.listen(port, "0.0.0.0", () => console.log(`👗 http://localhost:${port}`));
