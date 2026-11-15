@@ -40,7 +40,7 @@ select option{background:#17161d}
 .sw{width:30px;height:30px;border-radius:50%;border:2px solid #fff3;padding:0}.sw.on{border:3px solid #fff;transform:scale(1.15)}
 .drop{border:2px dashed var(--line);border-radius:18px;padding:26px;text-align:center;color:var(--mut);position:relative;overflow:hidden}
 .drop img{max-height:220px;border-radius:12px}.drop input{position:absolute;inset:0;opacity:0;margin:0}
-.mini{display:flex;gap:6px;margin-top:8px}.mini img,.mini .ph{width:48px;height:60px;border-radius:8px;object-fit:cover;background:var(--card);display:flex;align-items:center;justify-content:center}
+.mini{display:flex;flex-direction:column;gap:6px;margin-top:8px}.pc{display:flex;align-items:center;gap:10px;font-size:14px}.mini img,.mini .ph{width:48px;height:60px;border-radius:8px;object-fit:cover;background:var(--card);display:flex;align-items:center;justify-content:center}
 #toast{position:fixed;top:18px;left:50%;transform:translate(-50%,-80px);background:#fff;color:#111;padding:11px 18px;border-radius:30px;font-size:14px;transition:.35s;z-index:20}#toast.on{transform:translate(-50%,0)}
 .empty{text-align:center;color:var(--mut);padding:40px 10px}
 small,.mut{color:var(--mut)}
@@ -146,7 +146,7 @@ function clothForm(c){
 function outfits(){
   m.innerHTML=`<h2>Mes looks</h2><button class="btn" id="add">＋ Créer un look</button><br><br>`+(S.outfits.map(o=>`<div class="card">
   ${o.render?`<img class="render" src="${o.render}" style="margin-bottom:10px">`:""}<div class="row"><b>${o.name}</b><small>${[o.occ,o.seas].filter(Boolean).join(" · ")}</small></div>
-  <div class="mini">${o.items.map(C).filter(Boolean).map(c=>c.img?`<img src="${c.img}">`:`<div class="ph">${EMO[c.cat]}</div>`).join("")}</div><br>
+  <div class="mini">${o.items.map(C).filter(Boolean).map(c=>`<div class="pc">${c.img?`<img src="${c.img}">`:`<div class="ph">${EMO[c.cat]}</div>`}<span>${c.name}</span></div>`).join("")}</div><br>
   <div class="row"><button class="btn sm" data-r="${o.id}">🪄 ${o.render?"Regénérer":"Générer le rendu"}</button><button class="btn sm ghost" data-d="${o.id}">🗑</button></div></div>`).join("")||`<div class="empty">Aucun look pour l'instant.</div>`);
   m.querySelectorAll("[data-d]").forEach(b=>b.onclick=async()=>{if(confirm("Supprimer ce look ?")){S.outfits=S.outfits.filter(o=>o.id!==b.dataset.d);await save();render()}});
   m.querySelectorAll("[data-r]").forEach(b=>b.onclick=async()=>{const o=S.outfits.find(x=>x.id===b.dataset.r);b.disabled=true;b.textContent="⏳ Création…";try{o.render=await renderLook(o.items);await save();render()}catch(e){toast(e.message);b.disabled=false;b.textContent="🪄 Réessayer"}});
@@ -166,172 +166,4 @@ function me(){
   $("#im").onchange=e=>{const r=new FileReader();r.onload=async()=>{try{S=JSON.parse(r.result);await save();toast("Importé ✅");render()}catch{toast("Fichier invalide")}};r.readAsText(e.target.files[0])}}
 
 load().then(d=>{if(d)S=d;if(S.defV!==2){const have=new Set(S.clothes.map(c=>c.name));DEF.forEach(([name,cat,color,u])=>{if(!have.has(name))S.clothes.push({id:id(),name,cat,color,seas:"",occ:"",img:u?defImg(u):""})});const N=n=>(S.clothes.find(c=>c.name===n)||{}).id;const hl=new Set(S.outfits.map(o=>o.name));DEFL.forEach(([name,it])=>{if(!hl.has(name))S.outfits.push({id:id(),name,items:it.map(N).filter(Boolean),occ:"",seas:"",render:""})});S.defV=2;save()}let ch=0;S.clothes.forEach(c=>{if(c.cat==="Haut"){c.cat=/^(pull|sweat)/i.test(c.name)?"Pull & sweat":"T-shirt";ch=1}});if(ch)save();render()});
-</script></body></html>
-<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0e0d12">
-<title>Ma Garde-robe</title>
-<style>
-:root{--bg:#0e0d12;--card:#ffffff0d;--line:#ffffff1a;--tx:#f4f1ec;--mut:#9a95a3;--a:#ff7a59;--b:#c77dff;--g:linear-gradient(135deg,var(--a),var(--b))}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{margin:0;background:var(--bg);color:var(--tx);font-family:"Inter",system-ui,sans-serif;padding:env(safe-area-inset-top) 0 100px}
-.bg{position:fixed;inset:0;z-index:-1;background:radial-gradient(600px 400px at 85% -5%,#c77dff33,transparent),radial-gradient(500px 400px at -10% 30%,#ff7a5922,transparent)}
-header{padding:22px 20px 6px;max-width:760px;margin:auto}
-h1{font-family:Georgia,serif;font-weight:400;font-size:34px;margin:0;letter-spacing:-1px}h1 span{color:var(--a)}
-#sub{color:var(--mut);font-size:14px;margin-top:2px}
-main{max-width:760px;margin:auto;padding:12px 16px;animation:in .35s ease}
-@keyframes in{from{opacity:0;transform:translateY(10px)}}
-nav{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom));display:flex;gap:4px;padding:6px;background:#1b1a22cc;backdrop-filter:blur(18px);border:1px solid var(--line);border-radius:26px;z-index:5}
-nav button{background:none;border:0;color:var(--mut);padding:10px 16px;border-radius:20px;font-size:13px;display:flex;flex-direction:column;align-items:center;gap:2px;transition:.25s}
-nav button b{font-size:19px;font-weight:400}nav .on{background:var(--g);color:#fff}
-.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px;margin-bottom:14px;backdrop-filter:blur(10px)}
-.btn{background:var(--g);color:#fff;border:0;border-radius:14px;padding:13px 18px;font-size:15px;font-weight:600;transition:.2s;box-shadow:0 8px 24px #ff7a5933}
-.btn:active{transform:scale(.96)}.btn.ghost{background:var(--card);box-shadow:none;border:1px solid var(--line);color:var(--tx)}.btn.sm{padding:8px 12px;font-size:13px}
-.btn[disabled]{opacity:.5}
-.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.chip{background:var(--card);border:1px solid var(--line);color:var(--mut);border-radius:20px;padding:7px 13px;font-size:13px;transition:.2s}
-.chip.on{background:var(--g);color:#fff;border-color:transparent}
-h2{font-family:Georgia,serif;font-weight:400;font-size:22px;margin:18px 0 10px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}
-.it{position:relative;border-radius:16px;overflow:hidden;background:var(--card);border:2px solid var(--line);aspect-ratio:3/4;transition:.25s}
-.it:hover{transform:translateY(-3px) rotate(-.6deg)}.it.sel{border-color:var(--a);box-shadow:0 0 0 3px #ff7a5944}
-.it img{width:100%;height:100%;object-fit:cover}.it .ph{display:flex;height:100%;align-items:center;justify-content:center;font-size:38px}
-.it .lb{position:absolute;left:0;right:0;bottom:0;padding:18px 8px 7px;font-size:12px;background:linear-gradient(transparent,#000c)}
-.dot{display:inline-block;width:10px;height:10px;border-radius:50%;border:1px solid #fff6;margin-right:4px}
-.render{width:100%;border-radius:20px;display:block;aspect-ratio:3/4;object-fit:cover}
-.shim{aspect-ratio:3/4;border-radius:20px;background:linear-gradient(100deg,#ffffff08 30%,#ffffff22 50%,#ffffff08 70%) #ffffff0a;background-size:300% 100%;animation:sh 1.3s infinite;display:flex;align-items:center;justify-content:center;color:var(--mut)}
-@keyframes sh{to{background-position:-150% 0}}
-.sheet{position:fixed;inset:0;background:#000a;z-index:10;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px)}
-.sheet.open{display:flex}.sheet>div{background:#17161d;border-radius:26px 26px 0 0;width:100%;max-width:560px;max-height:92vh;overflow:auto;padding:20px;animation:up .3s ease}
-@keyframes up{from{transform:translateY(60px);opacity:0}}
-input,select{width:100%;background:var(--card);border:1px solid var(--line);color:var(--tx);border-radius:12px;padding:12px;font-size:15px;margin:5px 0}
-select option{background:#17161d}
-.sw{width:30px;height:30px;border-radius:50%;border:2px solid #fff3;padding:0}.sw.on{border:3px solid #fff;transform:scale(1.15)}
-.drop{border:2px dashed var(--line);border-radius:18px;padding:26px;text-align:center;color:var(--mut);position:relative;overflow:hidden}
-.drop img{max-height:220px;border-radius:12px}.drop input{position:absolute;inset:0;opacity:0;margin:0}
-.mini{display:flex;gap:6px;margin-top:8px}.mini img,.mini .ph{width:48px;height:60px;border-radius:8px;object-fit:cover;background:var(--card);display:flex;align-items:center;justify-content:center}
-#toast{position:fixed;top:18px;left:50%;transform:translate(-50%,-80px);background:#fff;color:#111;padding:11px 18px;border-radius:30px;font-size:14px;transition:.35s;z-index:20}#toast.on{transform:translate(-50%,0)}
-.empty{text-align:center;color:var(--mut);padding:40px 10px}
-small,.mut{color:var(--mut)}
-</style></head><body>
-<div class="bg"></div>
-<header><h1>Maison<span>.</span></h1><div id="sub"></div></header>
-<main id="m"></main>
-<nav id="nav"></nav>
-<div id="sheet" class="sheet"></div><div id="toast"></div>
-<script>
-const CATS=["T-shirt","Pull & sweat","Bas","Robe","Veste","Chaussures","Accessoire"],EMO={"T-shirt":"👕","Pull & sweat":"🧶",Haut:"👕",Bas:"👖",Robe:"👗",Veste:"🧥",Chaussures:"👟",Accessoire:"🧣"};
-const SEAS=["Été","Hiver","Mi-saison"],OCC=["Décontracté","Travail","Soirée","Sport"];
-const COL={Noir:"#111",Blanc:"#f5f5f5",Gris:"#999",Beige:"#d9c3a0",Marron:"#7a4a2a",Bleu:"#2a5db0",Marine:"#14284b",Vert:"#2f7d4f",Rouge:"#c0262d",Rose:"#e88ab0",Jaune:"#f2c230",Orange:"#e8782a",Violet:"#7a4fb0"};
-const NEUTRAL=["Noir","Blanc","Gris","Beige","Marine","Marron"];
-const $=s=>document.querySelector(s),m=$("#m"),sheet=$("#sheet");
-const id=()=>Math.random().toString(36).slice(2,9),pick=a=>a[Math.floor(Math.random()*a.length)];
-const DEF=[["T-shirt blanc épais","T-shirt","Blanc","U:465185/item/eugoods_00_465185_3x4.jpg"],["T-shirt blanc fin long","T-shirt","Blanc","U:465193/item/eugoods_00_465193_3x4.jpg"],["T-shirt blanc fin normal","T-shirt","Blanc","U:455365/item/eugoods_00_455365_3x4.jpg"],["T-shirt blanc près du corps","T-shirt","Blanc","U:455365/item/eugoods_00_455365_3x4.jpg"],["T-shirt blanc avec image","T-shirt","Blanc","U:455365/item/eugoods_00_455365_3x4.jpg"],["Polo blanc Ralph Lauren","T-shirt","Blanc","U:482325/item/eugoods_01_482325_3x4.jpg"],["T-shirt blanc Stüssy","T-shirt","Blanc","S:1905000_WHIT_1.jpg"],["Pull quart zip blanc Ralph Lauren","Pull & sweat","Blanc","U:486078/item/eugoods_31_486078_3x4.jpg"],["Pull rayé blanc et gris","Pull & sweat","Blanc","U:488209/item/eugoods_01_488209_3x4.jpg"],["Pull blanc","Pull & sweat","Blanc","U:453754/item/eugoods_01_453754_3x4.jpg"],["Pull torsadé blanc Ralph Lauren","Pull & sweat","Blanc","U:486071/item/eugoods_30_486071_3x4.jpg"],["Sweat zip blanc Ralph Lauren","Pull & sweat","Blanc","U:471808/item/eugoods_03_471808_3x4.jpg"],["T-shirt noir près du corps","T-shirt","Noir","U:455365/item/eugoods_09_455365_3x4.jpg"],["T-shirt noir épais","T-shirt","Noir","U:465185/item/eugoods_09_465185_3x4.jpg"],["T-shirt noir normal","T-shirt","Noir","U:455365/item/eugoods_09_455365_3x4.jpg"],["T-shirt noir Stüssy","T-shirt","Noir","S:1905000_BLAC_1.jpg"],["Pull noir","Pull & sweat","Noir","U:453754/item/eugoods_09_453754_3x4.jpg"],["Pull col roulé noir","Pull & sweat","Noir","U:471601/item/eugoods_09_471601_3x4.jpg"],["T-shirt bleu Carhartt","T-shirt","Bleu","U:465185/item/eugoods_65_465185_3x4.jpg"],["T-shirt bordeaux","T-shirt","Rouge","U:465185/item/eugoods_18_465185_3x4.jpg"],["T-shirt marron","T-shirt","Marron","U:465185/item/eugoods_39_465185_3x4.jpg"],["Pull marron","Pull & sweat","Marron","U:453754/item/eugoods_38_453754_3x4.jpg"],["Pull torsadé marron Ralph Lauren","Pull & sweat","Marron","U:486071/item/eugoods_36_486071_3x4.jpg"],["T-shirt vert olive","T-shirt","Vert","U:465185/item/eugoods_58_465185_3x4.jpg"],["Pull vert foncé torsadé","Pull & sweat","Vert","U:486071/item/eugoods_54_486071_3x4.jpg"],["Pull vert et rose","Pull & sweat","Vert","U:485310/item/eugoods_54_485310_3x4.jpg"],["Pull vert très foncé","Pull & sweat","Vert","U:453754/item/eugoods_52_453754_3x4.jpg"],["Pull quart zip vert Ralph Lauren","Pull & sweat","Vert","U:486078/item/eugoods_58_486078_3x4.jpg"],["T-shirt gris manches longues","T-shirt","Gris","U:465193/item/eugoods_08_465193_3x4.jpg"],["Henley gris","T-shirt","Gris","U:465193/item/eugoods_08_465193_3x4.jpg"],["Sweat capuche gris foncé","Pull & sweat","Gris","U:471808/item/eugoods_08_471808_3x4.jpg"],["Sweat capuche gris Stüssy (1)","Pull & sweat","Gris","S:1925000_ASHH_1.jpg"],["Sweat capuche gris Stüssy (2)","Pull & sweat","Gris","S:1925000_ASHH_1.jpg"],["T-shirt bleu foncé près du corps","T-shirt","Marine","U:455365/item/eugoods_69_455365_3x4.jpg"],["T-shirt bleu foncé logo Ralph Lauren","T-shirt","Marine","U:465185/item/eugoods_69_465185_3x4.jpg"],["Polo bleu foncé","T-shirt","Marine","U:482325/item/eugoods_69_482325_3x4.jpg"],["Pull quart zip bleu foncé","Pull & sweat","Marine","U:486078/item/eugoods_69_486078_3x4.jpg"],["Pull col roulé bleu foncé","Pull & sweat","Marine","U:471601/item/eugoods_69_471601_3x4.jpg"],["Pull bleu foncé Stone","Pull & sweat","Marine","U:453754/item/eugoods_69_453754_3x4.jpg"],["Pull quart zip marinière","Pull & sweat","Marine","U:486078/item/eugoods_69_486078_3x4.jpg"],["Jean bleu clair","Bas","Bleu","U:489367/item/eugoods_65_489367_3x4.jpg"],["Jean bleu foncé","Bas","Marine","U:487206/item/eugoods_67_487206_3x4.jpg"],["Jean gris","Bas","Gris","U:487206/item/eugoods_03_487206_3x4.jpg"],["Jean noir","Bas","Noir","U:482868/item/eugoods_09_482868_3x4.jpg"],["Pantalon noir","Bas","Noir","U:484875/item/eugoods_09_484875_3x4.jpg"],["Jean blanc","Bas","Blanc","U:487206/item/eugoods_01_487206_3x4.jpg"],["Pantalon blanc","Bas","Blanc","U:484875/item/eugoods_01_484875_3x4.jpg"],["Pantalon beige","Bas","Beige","U:484875/item/eugoods_32_484875_3x4.jpg"],["Veste noire","Veste","Noir","U:487326/item/eugoods_69_487326_3x4.jpg"],["K-way noir Stone","Veste","Noir","U:486176/item/eugoods_09_486176_3x4.jpg"],["Veste verte","Veste","Vert","U:481731/item/eugoods_57_481731_3x4.jpg"],["Veste beige","Veste","Beige","U:487326/item/eugoods_34_487326_3x4.jpg"],["Veste bleu foncé en laine","Veste","Marine","U:487326/item/eugoods_69_487326_3x4.jpg"]];
-const defImg=u=>"/api/img?url="+encodeURIComponent(u.startsWith("U:")?"https://image.uniqlo.com/UQ/ST3/eu/imagesgoods/"+u.slice(2)+"?width=700":"https://cdn.shopify.com/s/files/1/0087/6193/3920/files/"+u.slice(2));
-let S={clothes:[],outfits:[],me:""},tab="today",ui={occ:"",seas:"",cat:"",sel:[],cur:null};
-
-/* ---- stockage IndexedDB ---- */
-const idb=()=>new Promise((ok,ko)=>{const r=indexedDB.open("garderobe",1);r.onupgradeneeded=()=>r.result.createObjectStore("kv");r.onsuccess=()=>ok(r.result);r.onerror=ko});
-async function load(){const d=await idb();return new Promise(ok=>{const q=d.transaction("kv").objectStore("kv").get("state");q.onsuccess=()=>ok(q.result)})}
-async function save(){const d=await idb();d.transaction("kv","readwrite").objectStore("kv").put(S,"state")}
-const toast=t=>{const e=$("#toast");e.textContent=t;e.classList.add("on");setTimeout(()=>e.classList.remove("on"),2600)};
-const C=i=>S.clothes.find(c=>c.id===i);
-
-/* ---- images ---- */
-const resize=(file,max)=>new Promise(ok=>{const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const s=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=im.width*s;c.height=im.height*s;c.getContext("2d").drawImage(im,0,0,c.width,c.height);ok(c.toDataURL("image/jpeg",.82))};im.src=r.result};r.readAsDataURL(file)});
-const tile=(c,x="")=>`<div class="it ${x}" data-id="${c.id}">${c.img?`<img src="${c.img}">`:`<div class="ph">${EMO[c.cat]}</div>`}<div class="lb"><span class="dot" style="background:${COL[c.color]}"></span>${c.name}</div></div>`;
-
-/* ---- navigation ---- */
-const TABS=[["today","✨","Idées"],["closet","👕","Dressing"],["outfits","🪞","Looks"],["me","👤","Moi"]];
-function render(){
-  $("#nav").innerHTML=TABS.map(([k,i,l])=>`<button class="${tab===k?"on":""}" data-t="${k}"><b>${i}</b>${l}</button>`).join("");
-  $("#sub").textContent=`${S.clothes.length} pièces · ${S.outfits.length} looks`;
-  m.style.animation="none";m.offsetWidth;m.style.animation="";
-  ({today,closet,outfits,me})[tab]()}
-$("#nav").onclick=e=>{const b=e.target.closest("button");if(b){tab=b.dataset.t;render()}};
-const openSheet=h=>{sheet.innerHTML=`<div>${h}</div>`;sheet.classList.add("open")};
-const closeSheet=()=>sheet.classList.remove("open");
-sheet.onclick=e=>{if(e.target===sheet)closeSheet()};
-
-/* ---- génération ---- */
-const seasonOK=(c,s)=>!s||!c.seas||c.seas===s||c.seas==="Toute l'année";
-const matches=(a,b)=>NEUTRAL.includes(a.color)||NEUTRAL.includes(b.color)||a.color===b.color;
-function generate(){
-  const ok=c=>seasonOK(c,ui.seas)&&(!ui.occ||!c.occ||c.occ===ui.occ),L=k=>S.clothes.filter(c=>c.cat===k&&ok(c));
-  for(let n=0;n<80;n++){
-    let it=[];
-    if(L("Robe").length&&Math.random()<.3)it.push(pick(L("Robe")));
-    else{const T=[...L("T-shirt"),...L("Pull & sweat"),...L("Haut")];if(!T.length||!L("Bas").length)return null;const h=pick(T),b=pick(L("Bas"));if(!matches(h,b))continue;it.push(h,b)}
-    if(L("Chaussures").length){const s=pick(L("Chaussures"));if(!it.every(i=>matches(i,s)))continue;it.push(s)}
-    if(L("Veste").length&&(ui.seas==="Hiver"||ui.seas==="Mi-saison"||Math.random()<.35)){const v=pick(L("Veste"));if(it.every(i=>matches(i,v)))it.push(v)}
-    if(L("Accessoire").length&&Math.random()<.4)it.push(pick(L("Accessoire")));
-    return it.map(i=>i.id)}
-  return null}
-async function renderLook(ids){
-  if(!S.me)throw new Error("Ajoute d'abord ta photo dans l'onglet « Moi »");
-  const g=ids.map(C).filter(c=>c&&c.img).map(c=>({cat:c.cat,name:c.name,color:c.color,img:c.img}));for(const x of g)if(!x.img.startsWith("data:"))x.img=await resize(await (await fetch(x.img)).blob(),700);
-  if(!g.length)throw new Error("Ajoute des photos à tes vêtements");
-  for(let t=0;t<2;t++){
-    const r=await fetch("/api/tryon",{method:"POST",headers:{"Content-Type":"application/json","x-code":localStorage.getItem("code")||""},body:JSON.stringify({person:S.me,garments:g})});
-    const j=await r.json();if(r.status===401&&t===0){const c=prompt("Code d'accès ?");if(!c)throw new Error(j.error);localStorage.setItem("code",c);continue}
-    if(!r.ok)throw new Error(j.error);return j.image}}
-
-/* ---- vues ---- */
-function today(){
-  const chips=(a,k)=>`<div class="row">${a.map(x=>`<button class="chip ${ui[k]===x?"on":""}" data-k="${k}" data-v="${x}">${x}</button>`).join("")}</div>`;
-  m.innerHTML=`<h2>Qu'est-ce qu'on porte ?</h2><div class="card"><small>Occasion</small>${chips(OCC,"occ")}<br><small>Saison</small>${chips(SEAS,"seas")}</div>
-  <div class="row"><button class="btn" id="mine">🎲 Un de mes looks</button><button class="btn ghost" id="gen">✨ Nouvelle idée</button></div><div id="res"></div>`;
-  m.querySelectorAll("[data-k]").forEach(b=>b.onclick=()=>{ui[b.dataset.k]=ui[b.dataset.k]===b.dataset.v?"":b.dataset.v;today()});
-  const show=(ids,title,o)=>{$("#res").innerHTML=`<h2>${title}</h2><div class="card"><div class="grid">${ids.map(C).filter(Boolean).map(c=>tile(c)).join("")}</div><br><div class="row"><button class="btn sm" id="try">🪄 Me voir habillé·e</button>${o?`<button class="btn sm ghost" id="sv">💾 Garder</button>`:""}</div></div><div id="out"></div>`;
-    $("#try").onclick=async()=>{$("#out").innerHTML=`<div class="shim">Création du rendu…</div>`;try{const img=await renderLook(ids);$("#out").innerHTML=`<img class="render" src="${img}">`;ui.last=img}catch(e){$("#out").innerHTML="";toast(e.message)}};
-    if(o)$("#sv").onclick=async()=>{const n=prompt("Nom du look ?","Look du "+new Date().toLocaleDateString("fr"));if(!n)return;S.outfits.push({id:id(),name:n,items:ids,occ:ui.occ,seas:ui.seas,render:ui.last||""});await save();toast("Look enregistré ✨");render()}};
-  $("#mine").onclick=()=>{const l=S.outfits.filter(o=>(!ui.occ||!o.occ||o.occ===ui.occ)&&(!ui.seas||!o.seas||o.seas===ui.seas));if(!l.length)return toast("Aucun look pour ces filtres");const o=pick(l);ui.last=o.render;show(o.items,o.name,0);if(o.render)$("#out").innerHTML=`<img class="render" src="${o.render}">`};
-  $("#gen").onclick=()=>{const g=generate();ui.last="";g?show(g,"Idée du jour",1):toast("Il faut au moins 1 haut + 1 bas (ou 1 robe)")}}
-
-function closet(){
-  const l=S.clothes.filter(c=>!ui.cat||c.cat===ui.cat);
-  m.innerHTML=`<h2>Mon dressing</h2><div class="row"><button class="btn" id="add">＋ Ajouter une pièce</button></div><br>
-  <div class="row">${["",...CATS].map(c=>`<button class="chip ${ui.cat===c?"on":""}" data-c="${c}">${c||"Tout"}</button>`).join("")}</div><br>
-  <div class="grid">${l.map(c=>tile(c)).join("")}</div>${l.length?"":`<div class="empty">Ton dressing est vide.<br>Ajoute ta première pièce ✨</div>`}`;
-  m.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>{ui.cat=b.dataset.c;closet()});
-  m.querySelectorAll(".it").forEach(e=>e.onclick=()=>clothForm(C(e.dataset.id)));$("#add").onclick=()=>clothForm()}
-function clothForm(c){
-  const isNew=!c;c=c||{id:id(),name:"",cat:"T-shirt",color:"Noir",seas:"",occ:"",img:""};
-  const opt=(a,v,e)=>(e?`<option value="">${e}</option>`:"")+a.map(x=>`<option ${x===v?"selected":""}>${x}</option>`).join("");
-  openSheet(`<h2 style="margin-top:0">${isNew?"Nouvelle pièce":"Modifier"}</h2>
-  <div class="drop" id="dr">${c.img?`<img src="${c.img}">`:"📷 Touche pour ajouter une photo"}<input type="file" accept="image/*" id="f"></div>
-  <input id="n" placeholder="Nom (ex : Jean noir slim)" value="${c.name}">
-  <select id="c">${opt(CATS,c.cat)}</select>
-  <div class="row" style="margin:8px 0" id="sws">${Object.keys(COL).map(k=>`<button class="sw ${k===c.color?"on":""}" data-k="${k}" style="background:${COL[k]}" title="${k}"></button>`).join("")}</div>
-  <select id="s">${opt(SEAS,c.seas,"Toute l'année")}</select><select id="o">${opt(OCC,c.occ,"Toute occasion")}</select><br>
-  <div class="row"><button class="btn" id="ok">Enregistrer</button>${isNew?"":`<button class="btn ghost" id="del">Supprimer</button>`}</div>`);
-  const onF=async e=>{if(!e.target.files[0])return;c.img=await resize(e.target.files[0],700);$("#dr").innerHTML=`<img src="${c.img}"><input type="file" accept="image/*" id="f">`;$("#f").onchange=onF};
-  $("#f").onchange=onF;
-  $("#sws").onclick=e=>{const k=e.target.dataset.k;if(!k)return;c.color=k;document.querySelectorAll(".sw").forEach(s=>s.classList.toggle("on",s.dataset.k===k))};
-  $("#ok").onclick=async()=>{c.name=$("#n").value||c.cat;c.cat=$("#c").value;c.seas=$("#s").value;c.occ=$("#o").value;if(isNew)S.clothes.push(c);await save();closeSheet();render()};
-  if(!isNew)$("#del").onclick=async()=>{if(!confirm("Supprimer ?"))return;S.clothes=S.clothes.filter(x=>x.id!==c.id);S.outfits.forEach(o=>o.items=o.items.filter(i=>i!==c.id));await save();closeSheet();render()}}
-
-function outfits(){
-  m.innerHTML=`<h2>Mes looks</h2><button class="btn" id="add">＋ Créer un look</button><br><br>`+(S.outfits.map(o=>`<div class="card">
-  ${o.render?`<img class="render" src="${o.render}" style="margin-bottom:10px">`:""}<div class="row"><b>${o.name}</b><small>${[o.occ,o.seas].filter(Boolean).join(" · ")}</small></div>
-  <div class="mini">${o.items.map(C).filter(Boolean).map(c=>c.img?`<img src="${c.img}">`:`<div class="ph">${EMO[c.cat]}</div>`).join("")}</div><br>
-  <div class="row"><button class="btn sm" data-r="${o.id}">🪄 ${o.render?"Regénérer":"Générer le rendu"}</button><button class="btn sm ghost" data-d="${o.id}">🗑</button></div></div>`).join("")||`<div class="empty">Aucun look pour l'instant.</div>`);
-  m.querySelectorAll("[data-d]").forEach(b=>b.onclick=async()=>{if(confirm("Supprimer ce look ?")){S.outfits=S.outfits.filter(o=>o.id!==b.dataset.d);await save();render()}});
-  m.querySelectorAll("[data-r]").forEach(b=>b.onclick=async()=>{const o=S.outfits.find(x=>x.id===b.dataset.r);b.disabled=true;b.textContent="⏳ Création…";try{o.render=await renderLook(o.items);await save();render()}catch(e){toast(e.message);b.disabled=false;b.textContent="🪄 Réessayer"}});
-  $("#add").onclick=()=>{ui.sel=[];builder()}}
-function builder(){
-  openSheet(`<h2 style="margin-top:0">Nouveau look</h2><input id="n" placeholder="Nom du look"><select id="o"><option value="">Toute occasion</option>${OCC.map(x=>`<option>${x}</option>`).join("")}</select><select id="s"><option value="">Toute saison</option>${SEAS.map(x=>`<option>${x}</option>`).join("")}</select>
-  ${CATS.map(k=>{const l=S.clothes.filter(c=>c.cat===k);return l.length?`<h2>${k}</h2><div class="grid">${l.map(c=>tile(c)).join("")}</div>`:""}).join("")||`<p class="mut">Ajoute d'abord des vêtements.</p>`}<br><button class="btn" id="ok">Enregistrer</button>`);
-  sheet.querySelectorAll(".it").forEach(e=>e.onclick=()=>{const i=e.dataset.id;ui.sel=ui.sel.includes(i)?ui.sel.filter(x=>x!==i):[...ui.sel,i];e.classList.toggle("sel")});
-  $("#ok").onclick=async()=>{if(!ui.sel.length)return toast("Choisis au moins une pièce");S.outfits.push({id:id(),name:$("#n").value||"Look "+(S.outfits.length+1),items:ui.sel,occ:$("#o").value,seas:$("#s").value,render:""});await save();closeSheet();render()}}
-
-function me(){
-  m.innerHTML=`<h2>Moi</h2><div class="card"><p class="mut">Ta photo en pied (de face, fond simple) sert de base pour générer tes looks portés.</p>
-  <div class="drop">${S.me?`<img src="${S.me}">`:"📷 Ajouter ma photo"}<input type="file" accept="image/*" id="f"></div></div>
-  <div class="card"><div class="row"><button class="btn ghost sm" id="ex">⬇ Exporter</button><label class="btn ghost sm">⬆ Importer<input type="file" id="im" accept=".json" hidden></label></div><p class="mut"><small>Données stockées sur cet appareil. Exporte pour sauvegarder.</small></p></div>`;
-  $("#f").onchange=async e=>{if(!e.target.files[0])return;S.me=await resize(e.target.files[0],1024);await save();toast("Photo enregistrée");me()};
-  $("#ex").onclick=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(S)],{type:"application/json"}));a.download="garde-robe.json";a.click()};
-  $("#im").onchange=e=>{const r=new FileReader();r.onload=async()=>{try{S=JSON.parse(r.result);await save();toast("Importé ✅");render()}catch{toast("Fichier invalide")}};r.readAsText(e.target.files[0])}}
-
-load().then(d=>{if(d)S=d;if(!S.clothes.length){S.clothes=DEF.map(([name,cat,color,u])=>({id:id(),name,cat,color,seas:"",occ:"",img:u?defImg(u):""}));save()}let ch=0;S.clothes.forEach(c=>{if(c.cat==="Haut"){c.cat=/^(pull|sweat)/i.test(c.name)?"Pull & sweat":"T-shirt";ch=1}});if(ch)save();render()});
 </script></body></html>
