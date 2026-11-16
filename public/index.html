@@ -17,7 +17,7 @@ main{max-width:760px;margin:auto;padding:8px 20px;animation:fu .5s ease both}
 @keyframes fd{from{opacity:0;letter-spacing:22px}}
 h2{font-family:var(--serif);font-weight:400;font-style:italic;font-size:34px;line-height:1.05;margin:26px 0 14px;letter-spacing:-.5px}
 nav{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:center;gap:0;padding:10px 8px calc(10px + env(safe-area-inset-bottom));background:#f3eee6f2;backdrop-filter:blur(10px);border-top:1px solid var(--ink);z-index:5}
-nav button{background:none;border:0;color:var(--mut);padding:8px 14px;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;font-family:var(--sans);position:relative;transition:color .3s}
+nav button{background:none;border:0;color:var(--mut);padding:8px 8px;font-size:10px;letter-spacing:1.8px;text-transform:uppercase;font-family:var(--sans);position:relative;transition:color .3s}
 nav button b{display:none}
 nav button:after{content:"";position:absolute;left:50%;right:50%;bottom:2px;height:1px;background:var(--ink);transition:.35s}
 nav .on{color:var(--ink)}nav .on:after{left:14px;right:14px}
@@ -31,6 +31,24 @@ small,.mut{color:var(--mut);font-size:10px;letter-spacing:2.5px;text-transform:u
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .chip{background:none;border:0;border-bottom:1px solid transparent;color:var(--mut);padding:6px 2px;margin-right:10px;font-family:var(--serif);font-style:italic;font-size:17px;transition:.25s;cursor:pointer}
 .tg{background:none;border:1px solid var(--line);color:var(--mut);padding:5px 10px;font-size:10px;letter-spacing:2px;text-transform:uppercase;font-family:var(--sans);cursor:pointer;transition:.2s}.tg.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.wx{font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:var(--mut);text-align:center;margin:16px 0 0}
+.worn{border:1px solid var(--ink);padding:12px 16px;margin-top:16px;text-align:center}
+.hn{font-family:var(--serif);font-size:24px;line-height:1.1}
+.hero{animation:fu .5s ease both}
+.hg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.hg .hp:first-child:nth-last-child(odd){grid-column:span 2}
+.hp img,.hp .ph{width:100%;aspect-ratio:3/4;object-fit:cover;background:#e7e0d4;display:flex;align-items:center;justify-content:center;font-size:30px}
+.hg .hp:first-child:nth-last-child(odd) img{aspect-ratio:4/3}
+.hp span{display:block;font-family:var(--serif);font-style:italic;font-size:14px;padding:6px 0 0}
+.hb{display:flex;align-items:center;justify-content:space-between;margin:18px 0}
+.nv{background:none;border:1px solid var(--ink);width:44px;height:44px;font-family:var(--serif);font-size:24px;line-height:1;cursor:pointer;color:var(--ink);transition:.2s}.nv:hover{background:var(--ink);color:var(--bg)}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;text-align:center}
+.cal small{padding:4px 0}
+.cd{aspect-ratio:3/4;border:1px solid var(--line);position:relative;overflow:hidden;cursor:pointer;background:var(--paper)}
+.cd span{position:absolute;top:3px;left:5px;font-size:11px;z-index:1}
+.cd img{width:100%;height:100%;object-fit:cover}
+.cd.has span{background:var(--paper);padding:0 3px}
+.cd.td{outline:1px solid var(--ink);outline-offset:1px}
 .chip.on{color:var(--ink);border-bottom-color:var(--ink)}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:18px 12px}
 .grid>*{animation:fu .6s ease both}
@@ -90,31 +108,73 @@ const resize=(file,max)=>new Promise(ok=>{const r=new FileReader();r.onload=()=>
 const tile=(c,x="")=>`<div class="it ${x}" data-id="${c.id}">${c.img?`<img src="${c.img}">`:`<div class="ph">${EMO[c.cat]}</div>`}<div class="lb"><span class="dot" style="background:${COL[c.color]}"></span>${c.name}</div></div>`;
 
 /* ---- navigation ---- */
-const TABS=[["today","✨","Idées"],["closet","👕","Dressing"],["outfits","🪞","Looks"],["me","👤","Moi"]];
+const TABS=[["today","✨","Idées"],["closet","👕","Dressing"],["outfits","🪞","Looks"],["agenda","📅","Agenda"],["me","👤","Moi"]];
 function render(){
   $("#nav").innerHTML=TABS.map(([k,i,l])=>`<button class="${tab===k?"on":""}" data-t="${k}"><b>${i}</b>${l}</button>`).join("");
   $("#sub").textContent=`${new Date().toLocaleDateString("fr",{weekday:"long",day:"numeric",month:"long"})} · ${S.clothes.length} pièces · ${S.outfits.length} looks`;
   m.style.animation="none";m.offsetWidth;m.style.animation="";
-  ({today,closet,outfits,me})[tab]()}
+  ({today,closet,outfits,agenda,me})[tab]()}
 $("#nav").onclick=e=>{const b=e.target.closest("button");if(b){tab=b.dataset.t;render()}};
 const openSheet=h=>{sheet.innerHTML=`<div>${h}</div>`;sheet.classList.add("open")};
 const closeSheet=()=>sheet.classList.remove("open");
 sheet.onclick=e=>{if(e.target===sheet)closeSheet()};
 
-/* ---- génération ---- */
+/* ---- dates & porté ---- */
+const dk=d=>{const x=new Date(d);x.setMinutes(x.getMinutes()-x.getTimezoneOffset());return x.toISOString().slice(0,10)};
+const TODAY=()=>dk(new Date());
+const W=()=>S.worn||(S.worn={});
+const daysAgo=k=>Math.round((new Date(TODAY())-new Date(k))/864e5);
+function recentPieces(n){const r=new Set();Object.entries(W()).forEach(([k,v])=>{const d=daysAgo(k);if(d>=0&&d<n)v.items.forEach(i=>r.add(i))});return r}
+function lookAge(o){let a=1e9;Object.entries(W()).forEach(([k,v])=>{if(v.id===o.id){const d=daysAgo(k);if(d>=0&&d<a)a=d}});return a}
+async function wear(items,name,lid,day){day=day||TODAY();W()[day]={items,name,id:lid||""};await save();toast(day===TODAY()?"Porté aujourd'hui ✓":"Ajouté à l'agenda")}
+const thumb=items=>(items.map(C).filter(c=>c&&c.img)[0]||{}).img;
+const row=c=>`<div class="pc">${c.img?`<img src="${c.img}">`:`<div class="ph">${EMO[c.cat]||""}</div>`}<span>${c.name}</span></div>`;
+
+/* ---- météo ---- */
+let WX=null;
+async function weather(){
+  if(WX)return WX;
+  const pos=await new Promise(r=>{if(!navigator.geolocation)return r(null);navigator.geolocation.getCurrentPosition(p=>r(p.coords),()=>r(null),{timeout:6000,maximumAge:36e5})});
+  const lat=pos?pos.latitude:48.85,lon=pos?pos.longitude:2.35;
+  try{const j=await (await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=auto&forecast_days=1`)).json();
+    const mx=Math.round(j.daily.temperature_2m_max[0]),mn=Math.round(j.daily.temperature_2m_min[0]);
+    WX={mx,mn,wc:j.daily.weather_code[0],seas:mx>=21?"Été":mx<=11?"Hiver":"Mi-saison",here:!!pos}}catch{WX={seas:""}}
+  return WX}
+const WICON=c=>c==null?"":c<=1?"☀️":c<=3?"⛅":c<=48?"🌫️":c<=67||c>=80?"🌧️":c<=77?"❄️":"⛈️";
+const wxt=()=>WX&&WX.mx!=null?`${WICON(WX.wc)} ${WX.mn}° / ${WX.mx}° · ${WX.here?"chez toi":"Paris"} · conseillé : ${WX.seas}`:"Météo indisponible";
+
+/* ---- générateur ---- */
 const seasonOK=(c,s)=>!s||!c.seas||c.seas===s||c.seas==="Toute l'année";
-const matches=(a,b)=>NEUTRAL.includes(a.color)||NEUTRAL.includes(b.color)||a.color===b.color;
-function generate(){
-  const ok=c=>seasonOK(c,ui.seas),L=k=>S.clothes.filter(c=>c.cat===k&&ok(c));
-  for(let n=0;n<80;n++){
-    let it=[];
-    if(L("Robe").length&&Math.random()<.3)it.push(pick(L("Robe")));
-    else{const T=[...L("T-shirt"),...L("Pull & sweat"),...L("Haut")];if(!T.length||!L("Bas").length)return null;const h=pick(T),b=pick(L("Bas"));if(!matches(h,b))continue;it.push(h,b)}
-    if(L("Chaussures").length){const s=pick(L("Chaussures"));if(!it.every(i=>matches(i,s)))continue;it.push(s)}
-    if(L("Veste").length&&(ui.seas==="Hiver"||ui.seas==="Mi-saison"||Math.random()<.35)){const v=pick(L("Veste"));if(it.every(i=>matches(i,v)))it.push(v)}
-    if(L("Accessoire").length&&Math.random()<.4)it.push(pick(L("Accessoire")));
-    return it.map(i=>i.id)}
-  return null}
+const POP=["Vert","Rouge","Rose","Jaune","Orange","Violet","Bleu"];
+const heavy=c=>/torsadé|col roulé|laine/i.test(c.name);
+const longS=c=>/manches longues|fin long|henley/i.test(c.name);
+function generate(seas){
+  const L=k=>S.clothes.filter(c=>c.cat===k&&seasonOK(c,seas));
+  let T=L("T-shirt"),P=L("Pull & sweat"),B=L("Bas"),V=L("Veste"),Sh=L("Chaussures");
+  if(seas==="Été")T=T.filter(c=>!longS(c));
+  if(seas==="Mi-saison")P=P.filter(c=>!heavy(c));
+  if((!T.length&&!P.length)||!B.length)return null;
+  const TU=T.filter(c=>!/polo|henley/i.test(c.name));
+  const rec=recentPieces(3);let best=null,bs=-1e9;
+  for(let n=0;n<300;n++){
+    const it=[];
+    if(seas==="Été"||!P.length)it.push(pick(T.length?T:P));
+    else if(seas==="Hiver"){const p=pick(P);if(TU.length&&!/col roulé/i.test(p.name)&&Math.random()<.6)it.push(pick(TU));it.push(p)}
+    else{if(Math.random()<.5){const p=pick(P);if(TU.length&&!/col roulé/i.test(p.name)&&Math.random()<.4)it.push(pick(TU));it.push(p)}else it.push(pick(T.length?T:P))}
+    const outer=it[it.length-1],bot=pick(B);it.push(bot);
+    let jac=null;if(V.length&&seas!=="Été"&&(seas==="Hiver"||Math.random()<.6)){jac=pick(V);it.push(jac)}
+    if(Sh.length)it.push(pick(Sh));
+    let s=Math.random()*4;
+    const pops=it.filter(c=>POP.includes(c.color)).length;if(pops>1)s-=6*(pops-1);
+    if(outer.color===bot.color&&outer.color!=="Noir")s-=4;
+    if(it.filter(c=>c.color==="Noir").length>=3)s-=2;
+    if(jac&&jac.color===outer.color)s-=2;
+    if(jac&&jac.color===bot.color&&jac.color!=="Noir")s-=1.5;
+    if(seas==="Hiver"&&it.some(heavy))s+=1;
+    if(it.filter(c=>NEUTRAL.includes(c.color)).length>=it.length-1)s+=1;
+    it.forEach(c=>{if(rec.has(c.id))s-=4});
+    if(s>bs){bs=s;best=it}}
+  return best.map(c=>c.id)}
 async function renderLook(ids){
   if(!S.me)throw new Error("Ajoute d'abord ta photo dans l'onglet « Moi »");
   const g=ids.map(C).filter(c=>c&&c.img).map(c=>({cat:c.cat,name:c.name,color:c.color,img:c.img}));for(const x of g)if(!x.img.startsWith("data:"))x.img=await resize(await (await fetch(x.img)).blob(),700);
@@ -125,16 +185,54 @@ async function renderLook(ids){
     if(!r.ok)throw new Error(j.error);return j.image}}
 
 /* ---- vues ---- */
+function build(){
+  ui.deckKey=ui.seas+"|"+ui.src;ui.idx=0;
+  if(ui.src==="gen"){const g=generate(ui.seas);ui.deck=g?[{name:"Idée du jour",items:g,gen:1}]:[]}
+  else{const rec=recentPieces(3);let l=S.outfits.filter(o=>!ui.seas||!SS(o).length||SS(o).includes(ui.seas)).map(o=>({o,a:lookAge(o),r:Math.random()-o.items.filter(i=>rec.has(i)).length*.5}));
+    const fresh=l.filter(x=>x.a>7);if(fresh.length)l=fresh;
+    l.sort((x,y)=>y.r-x.r);ui.deck=l.map(x=>({name:x.o.name,items:x.o.items,id:x.o.id,render:x.o.render}))}}
+function hero(){
+  const h=$("#hero"),cur=ui.deck[ui.idx];
+  if(!cur){h.innerHTML=`<div class="empty">Aucun look pour cette saison.</div>`;return}
+  const its=cur.items.map(C).filter(Boolean);
+  h.innerHTML=`<div class="hero"><div class="hg">${its.map(c=>`<div class="hp">${c.img?`<img src="${c.img}">`:`<div class="ph">${EMO[c.cat]||""}</div>`}<span>${c.name}</span></div>`).join("")}</div>
+  <div class="hb"><button class="nv" id="pv" aria-label="Précédent">‹</button><div style="text-align:center"><div class="hn">${cur.name}</div><small>${cur.gen?"idée générée":(ui.idx+1)+" / "+ui.deck.length}</small></div><button class="nv" id="nx" aria-label="Suivant">›</button></div>
+  <div class="row" style="justify-content:center"><button class="btn" id="wr">Je le porte aujourd'hui</button><button class="btn ghost" id="try">🪄 Me voir</button>${cur.gen?`<button class="btn ghost" id="sv">Garder</button>`:""}</div><div id="out">${cur.render?`<img class="render" src="${cur.render}" style="margin-top:14px">`:""}</div></div>`;
+  const go=d=>{if(ui.src==="gen"&&d>0&&ui.idx===ui.deck.length-1){const g=generate(ui.seas);if(g)ui.deck.push({name:"Idée du jour",items:g,gen:1})}ui.idx=(ui.idx+d+ui.deck.length)%ui.deck.length;hero()};
+  $("#pv").onclick=()=>go(-1);$("#nx").onclick=()=>go(1);
+  let x0=null;h.ontouchstart=e=>x0=e.touches[0].clientX;h.ontouchend=e=>{if(x0==null)return;const dx=e.changedTouches[0].clientX-x0;x0=null;if(Math.abs(dx)>50)go(dx<0?1:-1)};
+  $("#wr").onclick=async()=>{await wear(cur.items,cur.name,cur.id);today()};
+  $("#try").onclick=async()=>{$("#out").innerHTML=`<div class="shim" style="margin-top:14px">Création du rendu…</div>`;try{const img=await renderLook(cur.items);cur.render=img;$("#out").innerHTML=`<img class="render" src="${img}" style="margin-top:14px">`;if(cur.id){const o=S.outfits.find(x=>x.id===cur.id);if(o){o.render=img;save()}}}catch(e){$("#out").innerHTML="";toast(e.message)}};
+  if(cur.gen)$("#sv").onclick=async()=>{const n=prompt("Nom du look ?","Idée du "+new Date().toLocaleDateString("fr"));if(!n)return;const o={id:id(),name:n,items:cur.items,seas:ui.seas?[ui.seas]:[],render:cur.render||""};S.outfits.push(o);Object.assign(cur,{gen:0,name:n,id:o.id});await save();toast("Look enregistré ✨");hero()}}
 function today(){
-  const chips=(a,k)=>`<div class="row">${a.map(x=>`<button class="chip ${ui[k]===x?"on":""}" data-k="${k}" data-v="${x}">${x}</button>`).join("")}</div>`;
-  m.innerHTML=`<h2>Qu&#39;est-ce qu&#39;on porte aujourd&#39;hui&nbsp;?</h2><div class="card"><small>Saison</small>${chips(SEAS,"seas")}</div>
-  <div class="row"><button class="btn" id="mine">🎲 Un de mes looks</button><button class="btn ghost" id="gen">✨ Nouvelle idée</button></div><div id="res"></div>`;
-  m.querySelectorAll("[data-k]").forEach(b=>b.onclick=()=>{ui[b.dataset.k]=ui[b.dataset.k]===b.dataset.v?"":b.dataset.v;today()});
-  const show=(ids,title,o)=>{$("#res").innerHTML=`<h2>${title}</h2><div class="card"><div class="grid">${ids.map(C).filter(Boolean).map(c=>tile(c)).join("")}</div><br><div class="row"><button class="btn sm" id="try">🪄 Me voir habillé·e</button>${o?`<button class="btn sm ghost" id="sv">💾 Garder</button>`:""}</div></div><div id="out"></div>`;
-    $("#try").onclick=async()=>{$("#out").innerHTML=`<div class="shim">Création du rendu…</div>`;try{const img=await renderLook(ids);$("#out").innerHTML=`<img class="render" src="${img}">`;ui.last=img}catch(e){$("#out").innerHTML="";toast(e.message)}};
-    if(o)$("#sv").onclick=async()=>{const n=prompt("Nom du look ?","Look du "+new Date().toLocaleDateString("fr"));if(!n)return;S.outfits.push({id:id(),name:n,items:ids,seas:ui.seas?[ui.seas]:[],render:ui.last||""});await save();toast("Look enregistré ✨");render()}};
-  $("#mine").onclick=()=>{const l=S.outfits.filter(o=>!ui.seas||!SS(o).length||SS(o).includes(ui.seas));if(!l.length)return toast("Aucun look pour ces filtres");const o=pick(l);ui.last=o.render;show(o.items,o.name,0);if(o.render)$("#out").innerHTML=`<img class="render" src="${o.render}">`};
-  $("#gen").onclick=()=>{const g=generate();ui.last="";g?show(g,"Idée du jour",1):toast("Il faut au moins 1 haut + 1 bas (ou 1 robe)")}}
+  ui.src=ui.src||"mine";
+  const wd=W()[TODAY()];
+  m.innerHTML=`<div class="wx">${WX?wxt():"Météo…"}</div>${wd?`<div class="worn"><small>Porté aujourd'hui</small><div class="hn">${wd.name}</div></div>`:""}<h2>Le look du jour</h2>
+  <div class="row" id="sz">${SEAS.map(x=>`<button class="chip ${ui.seas===x?"on":""}" data-v="${x}">${x}</button>`).join("")}</div>
+  <div class="row" style="margin:6px 0 16px"><button class="tg ${ui.src==="mine"?"on":""}" data-src="mine">Mes looks</button><button class="tg ${ui.src==="gen"?"on":""}" data-src="gen">Nouvelles idées</button></div><div id="hero"></div>`;
+  m.querySelectorAll("#sz .chip").forEach(b=>b.onclick=()=>{ui.seas=ui.seas===b.dataset.v?"":b.dataset.v;ui.manual=1;today()});
+  m.querySelectorAll("[data-src]").forEach(b=>b.onclick=()=>{ui.src=b.dataset.src;today()});
+  if(!WX)weather().then(w=>{if(!ui.manual&&w.seas)ui.seas=w.seas;if(tab==="today")today()});
+  if(ui.deckKey!==ui.seas+"|"+ui.src||!ui.deck)build();
+  hero()}
+
+function agenda(){
+  const b=ui.mo||(ui.mo=TODAY().slice(0,7)),[y,mo]=b.split("-").map(Number);
+  const first=new Date(y,mo-1,1),nd=new Date(y,mo,0).getDate(),off=(first.getDay()+6)%7;
+  let cells="";for(let i=0;i<off;i++)cells+="<div></div>";
+  for(let d=1;d<=nd;d++){const k=`${b}-${String(d).padStart(2,"0")}`,w=W()[k],im=w&&thumb(w.items);
+    cells+=`<div class="cd ${k===TODAY()?"td":""} ${w?"has":""}" data-d="${k}"><span>${d}</span>${im?`<img src="${im}">`:""}</div>`}
+  m.innerHTML=`<h2>Agenda</h2><div class="hb"><button class="nv" id="pm" aria-label="Mois précédent">‹</button><div class="hn" style="text-transform:capitalize">${first.toLocaleDateString("fr",{month:"long",year:"numeric"})}</div><button class="nv" id="nm" aria-label="Mois suivant">›</button></div>
+  <div class="cal">${["L","M","M","J","V","S","D"].map(x=>`<small>${x}</small>`).join("")}${cells}</div><p class="mut" style="margin-top:16px">Touche un jour pour voir ou choisir sa tenue</p>`;
+  $("#pm").onclick=()=>{ui.mo=dk(new Date(y,mo-2,1)).slice(0,7);agenda()};
+  $("#nm").onclick=()=>{ui.mo=dk(new Date(y,mo,1)).slice(0,7);agenda()};
+  m.querySelectorAll(".cd").forEach(e=>e.onclick=()=>dayView(e.dataset.d))}
+function dayView(k){
+  const w=W()[k],lab=new Date(k+"T12:00").toLocaleDateString("fr",{weekday:"long",day:"numeric",month:"long"});
+  const list=S.outfits.map(o=>{const t=thumb(o.items);return `<div class="pc" data-o="${o.id}" style="cursor:pointer">${t?`<img src="${t}">`:`<div class="ph"></div>`}<span>${o.name}</span></div>`}).join("");
+  openSheet(`<h2 style="margin-top:0;text-transform:capitalize">${lab}</h2>${w?`<small>Tenue</small><div class="hn" style="margin:4px 0 8px">${w.name}</div><div class="mini">${w.items.map(C).filter(Boolean).map(row).join("")}</div><br><button class="btn ghost sm" id="rm">Retirer</button><h2>Changer pour</h2>`:`<small>Choisis un look pour ce jour</small>`}<div class="mini">${list}</div>`);
+  if(w)$("#rm").onclick=async()=>{delete W()[k];await save();closeSheet();agenda()};
+  sheet.querySelectorAll("[data-o]").forEach(e=>e.onclick=async()=>{const o=S.outfits.find(x=>x.id===e.dataset.o);await wear(o.items,o.name,o.id,k);closeSheet();agenda()})}
 
 function closet(){
   const l=S.clothes.filter(c=>!ui.cat||c.cat===ui.cat);
@@ -164,9 +262,10 @@ function outfits(){
   m.innerHTML=`<h2>Mes looks</h2><button class="btn" id="add">＋ Créer un look</button><div class="row" style="margin:18px 0 10px">${["",...SEAS].map(x=>`<button class="chip ${ui.lf===x?"on":""}" data-lf="${x}">${x||"Tous"}</button>`).join("")}</div>`+(OL.map(o=>`<div class="card">
   ${o.render?`<img class="render" src="${o.render}" style="margin-bottom:10px">`:""}<div class="row"><b>${o.name}</b></div><div class="row" style="margin-top:6px">${SEAS.map(x=>`<button class="tg ${SS(o).includes(x)?"on":""}" data-s="${o.id}" data-v="${x}">${x}</button>`).join("")}</div>
   <div class="mini">${o.items.map(C).filter(Boolean).map(c=>`<div class="pc">${c.img?`<img src="${c.img}">`:`<div class="ph">${EMO[c.cat]}</div>`}<span>${c.name}</span></div>`).join("")}</div><br>
-  <div class="row"><button class="btn sm" data-r="${o.id}">🪄 ${o.render?"Regénérer":"Générer le rendu"}</button><button class="btn sm ghost" data-d="${o.id}">🗑</button></div></div>`).join("")||`<div class="empty">Aucun look pour l'instant.</div>`);
+  <div class="row"><button class="btn sm" data-r="${o.id}">🪄 ${o.render?"Regénérer":"Générer le rendu"}</button><button class="btn sm ghost" data-w="${o.id}">Porter aujourd'hui</button><button class="btn sm ghost" data-d="${o.id}">🗑</button></div></div>`).join("")||`<div class="empty">Aucun look pour l'instant.</div>`);
   m.querySelectorAll("[data-lf]").forEach(b=>b.onclick=()=>{ui.lf=b.dataset.lf;outfits()});
   m.querySelectorAll("[data-s]").forEach(b=>b.onclick=async()=>{const o=S.outfits.find(x=>x.id===b.dataset.s);o.seas=tgl(SS(o),b.dataset.v);b.classList.toggle("on");await save()});
+  m.querySelectorAll("[data-w]").forEach(b=>b.onclick=async()=>{const o=S.outfits.find(x=>x.id===b.dataset.w);await wear(o.items,o.name,o.id)});
   m.querySelectorAll("[data-d]").forEach(b=>b.onclick=async()=>{if(confirm("Supprimer ce look ?")){S.outfits=S.outfits.filter(o=>o.id!==b.dataset.d);await save();render()}});
   m.querySelectorAll("[data-r]").forEach(b=>b.onclick=async()=>{const o=S.outfits.find(x=>x.id===b.dataset.r);b.disabled=true;b.textContent="⏳ Création…";try{o.render=await renderLook(o.items);await save();render()}catch(e){toast(e.message);b.disabled=false;b.textContent="🪄 Réessayer"}});
   $("#add").onclick=()=>{ui.sel=[];builder()}}
