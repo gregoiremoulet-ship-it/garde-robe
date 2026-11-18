@@ -49,6 +49,7 @@ small,.mut{color:var(--mut);font-size:10px;letter-spacing:2.5px;text-transform:u
 .cd img{width:100%;height:100%;object-fit:cover}
 .cd.has span{background:var(--paper);padding:0 3px}
 .cd.td{outline:1px solid var(--ink);outline-offset:1px}
+.ihd{display:flex;gap:16px;align-items:center}.ihd img{width:110px;aspect-ratio:3/4;object-fit:cover;flex-shrink:0}
 .chip.on{color:var(--ink);border-bottom-color:var(--ink)}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:18px 12px}
 .grid>*{animation:fu .6s ease both}
@@ -157,11 +158,13 @@ function shoeFor(ids){
   else if(["Noir","Gris"].includes(bot.color))n="Jordan 1 Low noire";
   else n="Autry Medalist blanche";
   return (by(n)||pick(Sh)).id}
-function generate(seas){
+function generate(seas,must){
+  const M=must?C(must):null;
   const L=k=>S.clothes.filter(c=>c.cat===k&&seasonOK(c,seas));
   let T=L("T-shirt"),P=L("Pull & sweat"),B=L("Bas"),V=L("Veste"),Sh=L("Chaussures");
   if(seas==="Été")T=T.filter(c=>!longS(c));
   if(seas==="Mi-saison")P=P.filter(c=>!heavy(c));
+  if(M){if(M.cat==="T-shirt")T=[M];if(M.cat==="Pull & sweat")P=[M];if(M.cat==="Bas")B=[M];if(M.cat==="Veste")V=[M]}
   if((!T.length&&!P.length)||!B.length)return null;
   const TU=T.filter(c=>!/polo|henley/i.test(c.name));
   const rec=recentPieces(3);let best=null,bs=-1e9;
@@ -172,6 +175,7 @@ function generate(seas){
     else{if(Math.random()<.5){const p=pick(P);if(TU.length&&!/col roulé/i.test(p.name)&&Math.random()<.4)it.push(pick(TU));it.push(p)}else it.push(pick(T.length?T:P))}
     const outer=it[it.length-1],bot=pick(B);it.push(bot);
     let jac=null;if(V.length&&seas!=="Été"&&(seas==="Hiver"||Math.random()<.6)){jac=pick(V);it.push(jac)}
+    if(M&&M.cat!=="Chaussures"&&!it.includes(M))continue;
     let s=Math.random()*4;
     const pops=it.filter(c=>POP.includes(c.color)).length;if(pops>1)s-=6*(pops-1);
     if(outer.color===bot.color&&outer.color!=="Noir")s-=4;
@@ -182,7 +186,8 @@ function generate(seas){
     if(it.filter(c=>NEUTRAL.includes(c.color)).length>=it.length-1)s+=1;
     it.forEach(c=>{if(rec.has(c.id))s-=4});
     if(s>bs){bs=s;best=it}}
-  const ids=best.map(c=>c.id),sh=shoeFor(ids);if(sh)ids.push(sh);return ids}
+  if(!best)return null;
+  const ids=best.map(c=>c.id),sh=M&&M.cat==="Chaussures"?M.id:shoeFor(ids);if(sh)ids.push(sh);return ids}
 async function renderLook(ids){
   if(!S.me)throw new Error("Ajoute d'abord ta photo dans l'onglet « Moi »");
   const g=ids.map(C).filter(c=>c&&c.img).map(c=>({cat:c.cat,name:c.name,color:c.color,img:c.img}));for(const x of g)if(!x.img.startsWith("data:"))x.img=await resize(await (await fetch(x.img)).blob(),700);
@@ -248,7 +253,18 @@ function closet(){
   <div class="row">${["",...CATS].map(c=>`<button class="chip ${ui.cat===c?"on":""}" data-c="${c}">${c||"Tout"}</button>`).join("")}</div><br>
   <div class="grid">${l.map(c=>tile(c)).join("")}</div>${l.length?"":`<div class="empty">Ton dressing est vide.<br>Ajoute ta première pièce ✨</div>`}`;
   m.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>{ui.cat=b.dataset.c;closet()});
-  m.querySelectorAll(".it").forEach(e=>e.onclick=()=>clothForm(C(e.dataset.id)));$("#add").onclick=()=>clothForm()}
+  m.querySelectorAll(".it").forEach(e=>e.onclick=()=>itemView(C(e.dataset.id)));$("#add").onclick=()=>clothForm()}
+function itemView(c){
+  const looks=S.outfits.filter(o=>o.items.includes(c.id)),ideas=[],seen=new Set();
+  for(let t=0;t<15&&ideas.length<3;t++){const g=generate(ui.seas||"",c.id)||generate("",c.id);if(!g)break;const k=g.slice().sort().join();if(!seen.has(k)){seen.add(k);ideas.push(g)}}
+  const card=(items,name,attr,keep)=>`<div class="card"><b>${name}</b><div class="mini">${items.map(C).filter(Boolean).map(row).join("")}</div><div class="row" style="margin-top:12px"><button class="btn sm" ${attr}>Je le porte aujourd'hui</button>${keep}</div></div>`;
+  openSheet(`<div class="ihd">${c.img?`<img src="${c.img}">`:""}<div><small>${c.cat}</small><div class="hn" style="margin:4px 0 10px">${c.name}</div><button class="tg" id="ed">✎ Modifier la pièce</button></div></div>
+  <h2>Idées avec</h2>${ideas.map((g,i)=>card(g,"Idée "+(i+1),`data-wg="${i}"`,`<button class="btn sm ghost" data-kg="${i}">Garder</button>`)).join("")||`<p class="empty">Pas d'idée possible avec cette pièce</p>`}<button class="btn ghost sm" id="more">↻ Autres idées</button>
+  <h2>Tes looks avec (${looks.length})</h2>${looks.map(o=>card(o.items,o.name,`data-wl="${o.id}"`,"")).join("")||`<p class="empty">Aucun look avec cette pièce</p>`}`);
+  $("#ed").onclick=()=>clothForm(c);$("#more").onclick=()=>itemView(c);
+  sheet.querySelectorAll("[data-wg]").forEach(b=>b.onclick=async()=>{await wear(ideas[b.dataset.wg],"Idée avec "+c.name,"");closeSheet();render()});
+  sheet.querySelectorAll("[data-wl]").forEach(b=>b.onclick=async()=>{const o=S.outfits.find(x=>x.id===b.dataset.wl);await wear(o.items,o.name,o.id);closeSheet();render()});
+  sheet.querySelectorAll("[data-kg]").forEach(b=>b.onclick=async()=>{const n=prompt("Nom du look ?",c.name+" "+(+b.dataset.kg+1));if(!n)return;S.outfits.push({id:id(),name:n,items:ideas[b.dataset.kg],seas:ui.seas?[ui.seas]:[],render:""});await save();toast("Look enregistré ✨");b.outerHTML="<small>Enregistré ✓</small>"})}
 function clothForm(c){
   const isNew=!c;c=c||{id:id(),name:"",cat:"T-shirt",color:"Noir",seas:"",occ:"",img:""};
   const opt=(a,v,e)=>(e?`<option value="">${e}</option>`:"")+a.map(x=>`<option ${x===v?"selected":""}>${x}</option>`).join("");
